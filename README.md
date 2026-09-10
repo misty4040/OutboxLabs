@@ -405,3 +405,30 @@ Time:        3.186 s
 * **At 100,000+ Jobs:** Direct single-document indexing adds network latency to the worker. We introduce a **Bulk Indexing Buffer**:
   - The worker appends sent message IDs to a Redis stream or buffer.
   - An ES bulk indexer worker flushes documents in batches of 500 via the Elasticsearch `_bulk` API.
+
+---
+
+## 8. Assumptions, Shortcuts, and Trade-offs
+
+### Assumptions
+1. **SMTP Sandbox Environment:** Ethereal SMTP is utilized as the primary test transport. This auto-generates live preview URLs for reviewer inspection without risking accidental spam or requiring live credit cards/domain verifications on SendGrid/AWS SES.
+2. **Standard Lead Formats:** Lead file parsing assumes standard CSV, TXT, or comma/newline-delimited formats with RFC 5322 email syntax. Non-standard corrupt encodings are gracefully caught and reported with line numbers.
+3. **Local Dev Storage (Port 3307):** MySQL is mapped to port 3307 via Docker Compose to avoid host collisions with existing local MySQL instances running on default port 3306.
+4. **Sliding Hour Rate Windows:** Rate limiting operates on deterministic 1-hour Unix timestamp windows (`Math.floor(Date.now() / 3600000)`), ensuring global synchronization across multiple worker instances.
+
+### Shortcuts
+1. **Direct In-Memory CSV Parsing:** Leads files up to 50MB are parsed in memory using Multer memory storage and line stream regex, which provides instant feedback for typical outreach batches (100–5,000 leads). For multi-gigabyte lists (1,000,000+ leads), chunked disk streaming or S3 pre-signed upload pipelines would be preferred.
+2. **Reviewer Quick-Login:** In addition to production-ready Google OAuth 2.0 with real Google Cloud credentials, a direct email input option (`Sign In with Email`) is provided so reviewers can evaluate the system immediately without configuring OAuth credentials if desired.
+3. **Single-Node Redis:** Redis is deployed as a single high-performance instance. For multi-region multi-datacenter clusters, key hash tags (`{rate_limit:userId}:window`) would be enforced for cluster key routing.
+
+### Trade-offs
+1. **BullMQ Redis Sorted Sets vs. DB Cron Polling:**
+   - *Choice:* We chose BullMQ delayed jobs backed by Redis Sorted Sets (`ZADD`).
+   - *Trade-off:* Requires Redis memory for active job metadata, but provides millisecond precision, zero polling query load on MySQL, and native thread-safe concurrency.
+2. **Atomic Row Claims vs. Pessimistic Table Locks:**
+   - *Choice:* Individual row claims via atomic SQL updates (`UPDATE EmailJob SET status = 'PROCESSING' WHERE id = ? AND status IN (...)`).
+   - *Trade-off:* Avoids expensive table locks and allows 5+ parallel worker threads to process distinct rows concurrently, requiring only a check on affected rows ($=1$).
+3. **Hour Rollover Rescheduling vs. Dropping Excess Jobs:**
+   - *Choice:* When the hourly limit is reached, jobs are **never dropped or marked failed**; they are automatically rescheduled to the exact start of the next hour window.
+   - *Trade-off:* Large campaigns with strict low limits will spread over multiple hours, prioritizing 100% deliverability and sender reputation over rushed delivery.
+
