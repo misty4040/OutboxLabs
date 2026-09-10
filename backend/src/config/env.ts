@@ -6,6 +6,41 @@ import { z } from 'zod';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const resolveDatabaseUrl = (): string => {
+  const dbUrl = process.env.DATABASE_URL?.trim();
+  if (dbUrl && dbUrl.length > 0) return dbUrl;
+
+  const mysqlUrl = process.env.MYSQL_URL?.trim();
+  if (mysqlUrl && mysqlUrl.length > 0) return mysqlUrl;
+
+  const host = process.env.MYSQLHOST || process.env.MYSQL_HOST;
+  const pass = process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD;
+  if (host && pass) {
+    const user = process.env.MYSQLUSER || process.env.MYSQL_USER || 'root';
+    const port = process.env.MYSQLPORT || process.env.MYSQL_PORT || '3306';
+    const db = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'railway';
+    return `mysql://${user}:${pass}@${host}:${port}/${db}`;
+  }
+  return 'mysql://root:rootpassword@127.0.0.1:3306/reachinbox';
+};
+
+const resolveRedisUrl = (): string => {
+  const rUrl = process.env.REDIS_URL?.trim();
+  if (rUrl && rUrl.length > 0) return rUrl;
+
+  const host = process.env.REDISHOST || process.env.REDIS_HOST;
+  const pass = process.env.REDISPASSWORD || process.env.REDIS_PASSWORD;
+  if (host && pass) {
+    const user = process.env.REDISUSER || process.env.REDIS_USER || 'default';
+    const port = process.env.REDISPORT || process.env.REDIS_PORT || '6379';
+    return `redis://${user}:${pass}@${host}:${port}`;
+  }
+  return 'redis://127.0.0.1:6379';
+};
+
+process.env.DATABASE_URL = resolveDatabaseUrl();
+process.env.REDIS_URL = resolveRedisUrl();
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(5001),
