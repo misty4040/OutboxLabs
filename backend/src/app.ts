@@ -56,12 +56,32 @@ export const createApp = (): express.Application => {
   // Bull Board Queue Dashboard (protected by requireAuth)
   app.use(setupBullBoardRouter());
 
-  // Health check endpoint
-  app.get('/api/health', (_req: Request, res: Response) => {
+  // Health check endpoint with Redis and DB diagnostics
+  app.get('/api/health', async (_req: Request, res: Response) => {
+    let redisStatus = 'unknown';
+    try {
+      const { getRedisClient } = await import('./queue/redis');
+      const redis = getRedisClient();
+      redisStatus = await redis.ping();
+    } catch (e: any) {
+      redisStatus = `error: ${e.message}`;
+    }
+
+    let dbStatus = 'unknown';
+    try {
+      const { prisma } = await import('./db/prisma');
+      await prisma.$queryRaw`SELECT 1`;
+      dbStatus = 'connected';
+    } catch (e: any) {
+      dbStatus = `error: ${e.message}`;
+    }
+
     sendSuccess(res, {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       service: 'reachinbox-scheduler-api',
+      redis: redisStatus,
+      database: dbStatus,
       environment: env.NODE_ENV,
     });
   });
