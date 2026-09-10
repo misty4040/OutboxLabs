@@ -12,26 +12,23 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // 1️⃣ Real Google OAuth Login (with dev reviewer fallback if keys not in .env)
+  // 1️⃣ Real Google OAuth Login
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       setError(null);
       const authUrl = await authApi.getGoogleAuthUrl();
+      // Redirect to real Google accounts chooser
       window.location.href = authUrl;
     } catch (err: any) {
       const msg = err.response?.data?.message || '';
       if (msg.includes('GOOGLE_CLIENT_ID') || msg.includes('not configured')) {
-        // In local development, seamlessly log in as Oliver Brown if Google Cloud keys are not set yet
-        try {
-          const user = await authApi.devLogin('oliver.brown@domain.io', 'Oliver Brown');
-          onLoginSuccess(user);
-          return;
-        } catch {
-          // ignore
-        }
+        setError(
+          'Google Client ID is not set in .env. To log in with your own email right now, type your email in the Email ID box below and click Login!'
+        );
+      } else {
+        setError(err.response?.data?.message || 'Failed to initiate Google sign in');
       }
-      setError(err.response?.data?.message || 'Failed to initiate Google sign in');
       setLoading(false);
     }
   };
