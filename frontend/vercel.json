@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://outboxlabs-production.up.railway.app/api/:match*"
+    },
+    {
+      "source": "/auth/:match*",
+      "destination": "https://outboxlabs-production.up.railway.app/auth/:match*"
+    },
+    {
+      "source": "/admin/:match*",
+      "destination": "https://outboxlabs-production.up.railway.app/admin/:match*"
+    },
+    {
+      "source": "/((?!api|auth|admin).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

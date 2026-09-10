@@ -9,12 +9,7 @@ import {
 } from '../types';
 
 const getBaseUrl = (): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl) return envUrl;
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return 'https://outboxlabs-production.up.railway.app';
-  }
-  return '';
+  return (import.meta as any).env?.VITE_API_URL || '';
 };
 
 const api = axios.create({
