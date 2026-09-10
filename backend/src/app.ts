@@ -12,6 +12,8 @@ import { setupBullBoardRouter } from './routes/adminQueue.routes';
 export const createApp = (): express.Application => {
   const app = express();
 
+  app.set('trust proxy', 1);
+
   // CORS configured for credentials and frontend domain
   app.use(
     cors({

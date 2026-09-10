@@ -25,10 +25,12 @@ export const sessionCookieOptions = {
  */
 authRouter.get('/google/url', (req: Request, res: Response) => {
   try {
-    const host = req.headers.host || '';
-    const isRailway = host.includes('railway.app');
-    const callbackUrl = isRailway
-      ? `https://${host}/auth/google/callback`
+    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+    const isProdOrRailway = env.NODE_ENV === 'production' || host.includes('railway.app') || Boolean(process.env.RAILWAY_ENVIRONMENT);
+    const callbackUrl = isProdOrRailway
+      ? (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')
+          ? env.GOOGLE_CALLBACK_URL
+          : 'https://outboxlabs-production.up.railway.app/auth/google/callback')
       : env.GOOGLE_CALLBACK_URL;
 
     const redirectUrl = googleAuthService.getAuthUrl(callbackUrl);
@@ -43,8 +45,11 @@ authRouter.get('/google/url', (req: Request, res: Response) => {
  * Redirect URI callback from Google
  */
 authRouter.get('/google/callback', async (req: Request, res: Response) => {
-  const targetFrontend = env.NODE_ENV === 'production'
-    ? (process.env.FRONTEND_URL || 'https://outbox-labs-frontend-indol.vercel.app')
+  const isProd = env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
+  const targetFrontend = isProd
+    ? (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost')
+        ? process.env.FRONTEND_URL
+        : 'https://outbox-labs-frontend-indol.vercel.app')
     : env.FRONTEND_URL;
 
   try {
@@ -53,10 +58,12 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
       return res.redirect(`${targetFrontend}/login?error=Missing+authorization+code`);
     }
 
-    const host = req.headers.host || '';
-    const isRailway = host.includes('railway.app');
-    const callbackUrl = isRailway
-      ? `https://${host}/auth/google/callback`
+    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+    const isProdOrRailway = isProd || host.includes('railway.app');
+    const callbackUrl = isProdOrRailway
+      ? (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')
+          ? env.GOOGLE_CALLBACK_URL
+          : 'https://outboxlabs-production.up.railway.app/auth/google/callback')
       : env.GOOGLE_CALLBACK_URL;
 
     const profile = await googleAuthService.getUserProfileFromCode(code, callbackUrl);
