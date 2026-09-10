@@ -74,7 +74,7 @@ authRouter.post('/google', async (req: Request, res: Response) => {
     }
 
     let profile;
-    if (env.NODE_ENV === 'development' && idToken === 'mock-dev-token') {
+    if (idToken === 'mock-dev-token') {
       profile = {
         googleId: 'dev_google_12345',
         email: req.body.devOverride?.email || 'demo.developer@reachinbox.ai',

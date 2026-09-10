@@ -8,8 +8,17 @@ import {
   SearchResultHit,
 } from '../types';
 
+const getBaseUrl = (): string => {
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return 'https://outboxlabs-production.up.railway.app';
+  }
+  return '';
+};
+
 const api = axios.create({
-  baseURL: (import.meta as any).env?.VITE_API_URL || '',
+  baseURL: getBaseUrl(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
