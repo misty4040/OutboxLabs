@@ -19,12 +19,12 @@ const envSchema = z.object({
   // Google OAuth
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
-  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:5000/auth/google/callback'),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:5001/auth/google/callback'),
   
   // Slack OAuth
   SLACK_CLIENT_ID: z.string().optional().default(''),
   SLACK_CLIENT_SECRET: z.string().optional().default(''),
-  SLACK_REDIRECT_URI: z.string().default('http://localhost:5000/api/slack/callback'),
+  SLACK_REDIRECT_URI: z.string().default('http://localhost:5001/api/slack/callback'),
   
   // SMTP / Ethereal
   SMTP_HOST: z.string().default('smtp.ethereal.email'),
