@@ -76,7 +76,7 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
     });
 
     res.cookie(COOKIE_NAME, token, sessionCookieOptions);
-    return res.redirect(`${targetFrontend}/dashboard`);
+    return res.redirect(`${targetFrontend}/?token=${token}`);
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
     return res.redirect(`${targetFrontend}/login?error=${encodeURIComponent(error.message || 'OAuth error')}`);

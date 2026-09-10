@@ -20,6 +20,14 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('reachinbox_token') : null;
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const authApi = {
   getMe: async (): Promise<UserProfile> => {
     const res = await api.get('/auth/me');
@@ -35,10 +43,17 @@ export const authApi = {
       idToken: 'mock-dev-token',
       devOverride: { email, name },
     });
+    if (res.data.data?.token) {
+      localStorage.setItem('reachinbox_token', res.data.data.token);
+    }
     return res.data.data.user;
   },
   logout: async (): Promise<void> => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      localStorage.removeItem('reachinbox_token');
+    }
   },
 };
 

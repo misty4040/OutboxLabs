@@ -26,8 +26,14 @@ export default function App() {
   const [scheduledLoading, setScheduledLoading] = useState(false);
   const [scheduledError, setScheduledError] = useState<string | null>(null);
 
-  // Check initial authentication
+  // Check initial authentication and OAuth redirect token
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    if (urlToken) {
+      localStorage.setItem('reachinbox_token', urlToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     checkAuth();
   }, []);
 
