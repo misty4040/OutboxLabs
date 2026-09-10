@@ -1,0 +1,1 @@
+web: npm --workspace=backend run start
