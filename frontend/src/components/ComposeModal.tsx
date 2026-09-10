@@ -106,10 +106,19 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
     e.preventDefault();
     setError(null);
 
-    const recipients = recipientsList.length > 0 ? recipientsList : parseResult?.validRecipients || [];
+    let recipients = [...recipientsList];
+    if (recipients.length === 0 && parseResult?.validRecipients?.length) {
+      recipients = parseResult.validRecipients;
+    }
+    if (recipients.length === 0 && manualInput.trim()) {
+      recipients = manualInput
+        .split(/[\n,;]+/)
+        .map((e) => e.trim())
+        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+    }
 
     if (recipients.length === 0) {
-      setError('Please provide at least one recipient email address (upload list or paste emails)');
+      setError('Please provide at least one valid recipient email address (upload CSV or paste emails)');
       return;
     }
 
