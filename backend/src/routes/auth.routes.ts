@@ -25,7 +25,13 @@ export const sessionCookieOptions = {
  */
 authRouter.get('/google/url', (req: Request, res: Response) => {
   try {
-    const redirectUrl = googleAuthService.getAuthUrl();
+    const host = req.headers.host || '';
+    const isRailway = host.includes('railway.app');
+    const callbackUrl = isRailway
+      ? `https://${host}/auth/google/callback`
+      : env.GOOGLE_CALLBACK_URL;
+
+    const redirectUrl = googleAuthService.getAuthUrl(callbackUrl);
     sendSuccess(res, { url: redirectUrl });
   } catch (error: any) {
     sendError(res, error.message || 'Failed to generate Google auth URL', 500);
@@ -37,13 +43,23 @@ authRouter.get('/google/url', (req: Request, res: Response) => {
  * Redirect URI callback from Google
  */
 authRouter.get('/google/callback', async (req: Request, res: Response) => {
+  const targetFrontend = env.NODE_ENV === 'production'
+    ? (process.env.FRONTEND_URL || 'https://outbox-labs-frontend-indol.vercel.app')
+    : env.FRONTEND_URL;
+
   try {
     const code = req.query.code as string;
     if (!code) {
-      return res.redirect(`${env.FRONTEND_URL}/login?error=Missing+authorization+code`);
+      return res.redirect(`${targetFrontend}/login?error=Missing+authorization+code`);
     }
 
-    const profile = await googleAuthService.getUserProfileFromCode(code);
+    const host = req.headers.host || '';
+    const isRailway = host.includes('railway.app');
+    const callbackUrl = isRailway
+      ? `https://${host}/auth/google/callback`
+      : env.GOOGLE_CALLBACK_URL;
+
+    const profile = await googleAuthService.getUserProfileFromCode(code, callbackUrl);
     const user = await userRepository.upsertGoogleUser(profile);
 
     const token = generateSessionToken({
@@ -53,10 +69,10 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
     });
 
     res.cookie(COOKIE_NAME, token, sessionCookieOptions);
-    return res.redirect(`${env.FRONTEND_URL}/dashboard`);
+    return res.redirect(`${targetFrontend}/dashboard`);
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
-    return res.redirect(`${env.FRONTEND_URL}/login?error=${encodeURIComponent(error.message || 'OAuth error')}`);
+    return res.redirect(`${targetFrontend}/login?error=${encodeURIComponent(error.message || 'OAuth error')}`);
   }
 });
 

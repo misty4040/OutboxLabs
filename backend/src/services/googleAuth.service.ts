@@ -22,12 +22,19 @@ export class GoogleAuthService {
   /**
    * Generates Google OAuth authorization URL
    */
-  getAuthUrl(state?: string): string {
+  getAuthUrl(customCallbackUrl?: string, state?: string): string {
     if (!env.GOOGLE_CLIENT_ID) {
       throw new Error('GOOGLE_CLIENT_ID is not configured in environment variables');
     }
 
-    return this.client.generateAuthUrl({
+    const redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
+    const client = new OAuth2Client(
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      redirectUri
+    );
+
+    return client.generateAuthUrl({
       access_type: 'offline',
       scope: ['openid', 'profile', 'email'],
       prompt: 'consent',
@@ -38,13 +45,20 @@ export class GoogleAuthService {
   /**
    * Exchanges an authorization code for tokens and extracts user profile
    */
-  async getUserProfileFromCode(code: string): Promise<GoogleUserProfile> {
+  async getUserProfileFromCode(code: string, customCallbackUrl?: string): Promise<GoogleUserProfile> {
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
       throw new Error('Google OAuth credentials not configured in environment');
     }
 
-    const { tokens } = await this.client.getToken(code);
-    this.client.setCredentials(tokens);
+    const redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
+    const client = new OAuth2Client(
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      redirectUri
+    );
+
+    const { tokens } = await client.getToken(code);
+    client.setCredentials(tokens);
 
     if (!tokens.id_token) {
       throw new Error('No ID token returned by Google');
