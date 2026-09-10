@@ -27,130 +27,139 @@ export const EmailDetailView: React.FC<EmailDetailViewProps> = ({ email, onBack 
   const senderInitial = (email.recipient.charAt(0) || 'O').toUpperCase();
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-full">
-      {/* Top Header matching Figma */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-3 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[#FFFFFF] min-h-full font-sans">
+      {/* Top Header */}
+      <div className="px-8 py-5 border-b border-[#D8D2C9] bg-[#FAF8F5] flex items-center justify-between">
+        <div className="flex items-center gap-4 overflow-hidden">
           <button
             onClick={onBack}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+            className="p-1.5 rounded-lg border border-[#D8D2C9] bg-[#FFFFFF] hover:bg-[#EBE7E0] text-[#111111] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h2 className="text-sm font-bold text-gray-900 truncate">
-            {email.subject} <span className="text-gray-400 font-normal">| ID:{email.id.slice(0, 8)}</span>
-          </h2>
+          <div className="truncate">
+            <span className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#8C867E] block font-mono">
+              EMAIL INSPECTION
+            </span>
+            <h2 className="text-base font-bold text-[#111111] truncate">
+              {email.subject}{' '}
+              <span className="text-[#8C867E] font-normal font-mono text-xs">
+                | ID: {email.id.slice(0, 8)}
+              </span>
+            </h2>
+          </div>
         </div>
 
-        {/* Action Icons matching Figma */}
-        <div className="flex items-center gap-1.5 text-gray-400">
+        {/* Action Icons */}
+        <div className="flex items-center gap-2 text-[#5F5A54]">
           <button
             onClick={() => setIsStarred(!isStarred)}
-            className="p-2 rounded-lg hover:bg-gray-100 hover:text-amber-500 transition cursor-pointer"
+            className="p-2 rounded-lg border border-[#D8D2C9] bg-[#FFFFFF] hover:bg-[#EBE7E0] hover:text-[#111111] transition-colors cursor-pointer"
           >
             <Star
-              className={`w-4 h-4 ${isStarred ? 'fill-amber-400 text-amber-400' : 'text-gray-400'}`}
+              className={`w-3.5 h-3.5 ${
+                isStarred ? 'fill-[#111111] text-[#111111]' : 'text-[#8C867E]'
+              }`}
             />
           </button>
           <button
             title="Archive"
-            className="p-2 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
+            className="p-2 rounded-lg border border-[#D8D2C9] bg-[#FFFFFF] hover:bg-[#EBE7E0] hover:text-[#111111] transition-colors cursor-pointer"
           >
-            <Archive className="w-4 h-4" />
+            <Archive className="w-3.5 h-3.5" />
           </button>
           <button
             title="Delete"
-            className="p-2 rounded-lg hover:bg-rose-50 hover:text-rose-500 transition cursor-pointer"
+            className="p-2 rounded-lg border border-[#ECD1C5] bg-[#FBF2EE] hover:bg-[#F5E2DA] text-[#9E3618] transition-colors cursor-pointer"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Email Body Content Area */}
-      <div className="flex-1 p-8 overflow-y-auto max-w-3xl space-y-6">
+      <div className="flex-1 p-10 overflow-y-auto max-w-3xl space-y-8">
         {/* Sender Line */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {/* Figma Green Avatar */}
-            <div className="w-9 h-9 rounded-full bg-[#00A859] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+        <div className="flex items-start justify-between gap-4 pb-6 border-b border-[#EBE7E0]">
+          <div className="flex items-center gap-3.5">
+            {/* Near-Black Avatar */}
+            <div className="w-9 h-9 rounded-full bg-[#111111] text-[#F4F1EC] font-bold text-xs flex items-center justify-center shrink-0 border border-[#111111]">
               {senderInitial}
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-gray-900 text-sm">
+                <span className="font-bold text-[#111111] text-sm">
                   {email.recipient.split('@')[0]}
                 </span>
-                <span className="text-xs text-gray-400">&lt;{email.recipient}&gt;</span>
+                <span className="text-xs text-[#8C867E] font-mono">&lt;{email.recipient}&gt;</span>
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-gray-500">
-                <span>to me</span>
-                <ChevronDown className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center gap-1 text-[11px] text-[#5F5A54] mt-0.5">
+                <span>to outbound receiver</span>
+                <ChevronDown className="w-3 h-3 text-[#8C867E]" />
               </div>
             </div>
           </div>
 
           <div className="text-right shrink-0">
-            <span className="text-xs text-gray-400">{formattedDate}</span>
+            <span className="text-xs font-mono text-[#8C867E]">{formattedDate}</span>
           </div>
         </div>
 
-        {/* Message Content */}
-        <div className="text-xs text-gray-800 leading-relaxed space-y-4 pt-2">
-          <p className="whitespace-pre-line">{email.body}</p>
+        {/* Message Content (Editorial Typography) */}
+        <div className="text-sm text-[#111111] leading-relaxed space-y-5 font-sans">
+          <p className="whitespace-pre-line leading-relaxed">{email.body}</p>
 
-          {/* Figma Yellow Highlight Callout Box */}
-          <div className="p-4 rounded-xl bg-[#FEF9C3] border border-[#FDE047]/60 text-[#854D0E] space-y-1 text-xs">
-            <p className="font-semibold flex items-center gap-1.5">
-              <span>⚡</span> Extremely Exclusive—Only 4 Spots Worldwide Per Year | $25,000 investment <span>⚡</span>
+          {/* Editorial Highlight Callout Box */}
+          <div className="p-5 rounded-xl bg-[#FAF8F5] border border-[#D8D2C9] text-[#111111] space-y-2 text-xs leading-relaxed">
+            <p className="font-bold tracking-tight text-xs flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#111111]" />
+              Campaign Performance Note & Call to Action
             </p>
-            <p>
-              ⚡ To explore securing your private transformation, simply reply right now with <strong className="underline">"FLY OUT FIX"</strong>.
+            <p className="text-[#5F5A54]">
+              Dispatched with automated delay spacing to maintain recipient server trust and avoid SPF/DKIM throttling.
             </p>
           </div>
 
-          <div className="pt-2 text-gray-600">
-            <p>Your coach for world-class performance,</p>
-            <p className="font-semibold text-gray-900">Grant</p>
+          <div className="pt-3 text-[#5F5A54]">
+            <p>Respectfully,</p>
+            <p className="font-semibold text-[#111111] mt-1">ReachInbox Team</p>
           </div>
+        </div>
 
-          <p className="text-[11px] text-gray-400 italic">
-            P.S. Always remember that you can develop world class technique! 🚀
+        {/* Attachments Section */}
+        <div className="pt-8 border-t border-[#EBE7E0]">
+          <p className="text-xs font-bold font-mono uppercase tracking-wider text-[#8C867E] mb-4">
+            2 Campaign Assets Attached
           </p>
-        </div>
-
-        {/* Figma Attachment Cards */}
-        <div className="pt-6 border-t border-gray-100">
-          <p className="text-xs font-semibold text-gray-700 mb-3">2 Attachments</p>
-          <div className="flex flex-wrap gap-3">
-            <div className="w-48 rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:border-gray-300 transition">
-              <div className="h-24 bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white text-xs font-semibold">
-                🎾 Tennis_Coach_Profile.png
+          <div className="flex flex-wrap gap-4">
+            <div className="w-52 rounded-xl border border-[#D8D2C9] overflow-hidden bg-[#FAF8F5] hover:border-[#111111] transition-colors">
+              <div className="h-20 bg-[#EBE7E0] flex items-center justify-center text-[#5F5A54] text-xs font-mono">
+                Asset_Spec_1.pdf
               </div>
-              <div className="p-2.5 bg-white flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-medium text-gray-800 truncate">
-                    Tennis_Coach_Profile.png
+              <div className="p-3 bg-[#FFFFFF] border-t border-[#D8D2C9] flex items-center justify-between">
+                <div className="truncate pr-2">
+                  <p className="text-[11px] font-semibold text-[#111111] truncate">
+                    Outreach_Brief.pdf
                   </p>
-                  <p className="text-[10px] text-gray-400">1.2 MB</p>
+                  <p className="text-[10px] text-[#8C867E] font-mono">1.2 MB</p>
                 </div>
-                <Download className="w-3.5 h-3.5 text-gray-400 hover:text-gray-700 cursor-pointer" />
+                <Download className="w-3.5 h-3.5 text-[#5F5A54] hover:text-[#111111] cursor-pointer" />
               </div>
             </div>
 
-            <div className="w-48 rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:border-gray-300 transition">
-              <div className="h-24 bg-gradient-to-tr from-emerald-400 to-teal-600 flex items-center justify-center text-white text-xs font-semibold">
-                🎾 Tennis_Coach_Profile2.png
+            <div className="w-52 rounded-xl border border-[#D8D2C9] overflow-hidden bg-[#FAF8F5] hover:border-[#111111] transition-colors">
+              <div className="h-20 bg-[#EBE7E0] flex items-center justify-center text-[#5F5A54] text-xs font-mono">
+                Asset_Spec_2.pdf
               </div>
-              <div className="p-2.5 bg-white flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-medium text-gray-800 truncate">
-                    Tennis_Coach_Profile2.png
+              <div className="p-3 bg-[#FFFFFF] border-t border-[#D8D2C9] flex items-center justify-between">
+                <div className="truncate pr-2">
+                  <p className="text-[11px] font-semibold text-[#111111] truncate">
+                    Sequencing_Plan.pdf
                   </p>
-                  <p className="text-[10px] text-gray-400">1.2 MB</p>
+                  <p className="text-[10px] text-[#8C867E] font-mono">840 KB</p>
                 </div>
-                <Download className="w-3.5 h-3.5 text-gray-400 hover:text-gray-700 cursor-pointer" />
+                <Download className="w-3.5 h-3.5 text-[#5F5A54] hover:text-[#111111] cursor-pointer" />
               </div>
             </div>
           </div>

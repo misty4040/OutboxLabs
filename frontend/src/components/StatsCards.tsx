@@ -1,5 +1,4 @@
 import React from 'react';
-import { Clock, Send, AlertTriangle, XCircle } from 'lucide-react';
 import { DashboardStats } from '../types';
 
 interface StatsCardsProps {
@@ -8,67 +7,55 @@ interface StatsCardsProps {
 }
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading }) => {
-  const cards = [
+  const items = [
     {
-      title: 'Scheduled Emails',
+      label: 'SCHEDULED',
       value: stats?.scheduledCount ?? 0,
-      icon: Clock,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10 border-amber-500/20',
-      description: 'Pending or delayed in queue',
+      description: 'Pending in BullMQ queue',
     },
     {
-      title: 'Sent Successfully',
+      label: 'DELIVERED',
       value: stats?.sentCount ?? 0,
-      icon: Send,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10 border-emerald-500/20',
-      description: 'Delivered via Ethereal SMTP',
+      description: 'Dispatched via Ethereal SMTP',
     },
     {
-      title: 'Rate Limited',
+      label: 'RATE LIMITED',
       value: stats?.rateLimitedCount ?? 0,
-      icon: AlertTriangle,
-      color: 'text-cyan-400',
-      bg: 'bg-cyan-500/10 border-cyan-500/20',
-      description: 'Rescheduled for next window',
+      description: 'Queued for subsequent window',
     },
     {
-      title: 'Failed Sends',
+      label: 'FAILED',
       value: stats?.failedCount ?? 0,
-      icon: XCircle,
-      color: 'text-rose-400',
-      bg: 'bg-rose-500/10 border-rose-500/20',
-      description: 'Exhausted retry attempts',
+      description: 'Exhausted retry threshold',
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {cards.map((card, idx) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={idx}
-            className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-sm relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400">{card.title}</span>
-              <div className={`p-2 rounded-xl border ${card.bg}`}>
-                <Icon className={`w-4 h-4 ${card.color}`} />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-white tracking-tight">
-              {loading ? (
-                <div className="h-8 w-16 bg-slate-800 animate-pulse rounded"></div>
-              ) : (
-                card.value.toLocaleString()
-              )}
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1">{card.description}</p>
+    <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-[#D8D2C9] bg-[#FAF8F5]">
+      {items.map((item, idx) => (
+        <div
+          key={idx}
+          className={`p-6 ${
+            idx < items.length - 1 ? 'border-r border-[#D8D2C9]' : ''
+          } flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#8C867E] font-mono">
+              {item.label}
+            </span>
           </div>
-        );
-      })}
+          <div className="text-3xl font-extrabold text-[#111111] tracking-tight font-sans">
+            {loading ? (
+              <div className="h-9 w-16 bg-[#EBE7E0] animate-pulse rounded"></div>
+            ) : (
+              item.value.toLocaleString()
+            )}
+          </div>
+          <p className="text-[11px] text-[#5F5A54] mt-2 font-normal leading-tight">
+            {item.description}
+          </p>
+        </div>
+      ))}
     </div>
   );
 };

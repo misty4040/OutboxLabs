@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { UserProfile, DashboardStats, EmailJob } from './types';
 import { authApi, emailApi } from './api/client';
 import { Sidebar } from './components/Sidebar';
+import { StatsCards } from './components/StatsCards';
 import { ScheduledView } from './components/ScheduledView';
 import { SentView } from './components/SentView';
 import { EmailDetailView } from './components/EmailDetailView';
@@ -84,24 +85,26 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-gray-500">
+      <div className="min-h-screen bg-[#F4F1EC] flex items-center justify-center text-[#5F5A54] font-sans">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[#00A859] animate-spin" />
-          <p className="text-xs font-semibold tracking-wider text-gray-600">Loading ONE...</p>
+          <Loader2 className="w-6 h-6 text-[#111111] animate-spin" />
+          <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-[#8C867E]">
+            Initializing ReachInbox Console...
+          </p>
         </div>
       </div>
     );
   }
 
-  // 1️⃣ Login Screen (Figma Exact)
+  // 1️⃣ Login Screen (Editorial Minimal)
   if (!user) {
     return <LoginView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
   }
 
-  // 2️⃣ Main Dashboard Layout (Figma Sidebar + Content Area)
+  // 2️⃣ Main Dashboard Layout (Editorial Sidebar + Content Area)
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Figma Sidebar */}
+    <div className="min-h-screen bg-[#F4F1EC] flex font-sans selection:bg-[#111111] selection:text-[#F4F1EC]">
+      {/* Editorial Sidebar */}
       <Sidebar
         user={user}
         stats={stats}
@@ -116,15 +119,20 @@ export default function App() {
       />
 
       {/* Main Content Pane */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#FFFFFF]">
+        {/* Minimal Editorial Stats Grid (When on main list) */}
+        {!selectedEmail && (
+          <StatsCards stats={stats} loading={scheduledLoading} />
+        )}
+
         {selectedEmail ? (
-          // Full Email Details Screen (Figma email detail variant)
+          // Full Email Details Screen
           <EmailDetailView
             email={selectedEmail}
             onBack={() => setSelectedEmail(null)}
           />
         ) : activeTab === 'scheduled' ? (
-          // 4️⃣ Scheduled Emails List (Figma scheduled table)
+          // Scheduled Emails List
           <ScheduledView
             jobs={scheduledJobs}
             total={scheduledTotal}
@@ -140,7 +148,7 @@ export default function App() {
             onComposeClick={() => setComposeOpen(true)}
           />
         ) : (
-          // 5️⃣ Sent Emails List (Figma sent view with search)
+          // Sent Emails List
           <SentView
             onSelectEmail={(email) => setSelectedEmail(email)}
             onRefreshStats={loadStats}
@@ -148,7 +156,7 @@ export default function App() {
         )}
       </main>
 
-      {/* 3️⃣ Compose New Email Flow (Figma Compose modal & Send Later popover) */}
+      {/* Compose New Email Modal */}
       <ComposeModal
         isOpen={composeOpen}
         userEmail={user.email}
