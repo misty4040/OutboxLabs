@@ -8,7 +8,7 @@ export class RecoveryService {
    * Finds jobs stuck in PROCESSING past a timeout threshold due to prior server crashes or restarts,
    * resets them to PENDING, and re-enqueues them into BullMQ.
    */
-  async reconcileStaleJobsOnStartup(staleThresholdMs = 5 * 60 * 1000): Promise<number> {
+  async reconcileStaleJobsOnStartup(staleThresholdMs = 15 * 1000): Promise<number> {
     const staleBefore = new Date(Date.now() - staleThresholdMs);
 
     try {

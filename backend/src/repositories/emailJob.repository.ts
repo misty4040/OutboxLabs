@@ -171,7 +171,11 @@ export class EmailJobRepository {
     for (const item of counts) {
       const count = item._count._all;
       totalCount += count;
-      if (item.status === EmailJobStatus.PENDING || item.status === EmailJobStatus.DELAYED) {
+      if (
+        item.status === EmailJobStatus.PENDING ||
+        item.status === EmailJobStatus.DELAYED ||
+        item.status === EmailJobStatus.PROCESSING
+      ) {
         scheduledCount += count;
       } else if (item.status === EmailJobStatus.SENT) {
         sentCount += count;
