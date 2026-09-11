@@ -24,6 +24,7 @@ jest.mock('../db/prisma', () => ({
       findMany: jest.fn(),
       count: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       groupBy: jest.fn(),
     },
     slackConnection: {
@@ -80,19 +81,19 @@ describe('Phase 2: Repository Layer Unit Tests', () => {
   });
 
   describe('EmailJobRepository', () => {
-    it('claimJobForProcessing should return true when raw update affects 1 row', async () => {
-      (prisma.$executeRaw as jest.Mock).mockResolvedValue(1);
+    it('claimJobForProcessing should return true when updateMany affects 1 row', async () => {
+      (prisma.emailJob.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
 
       const claimed = await emailJobRepository.claimJobForProcessing('job_123');
-      expect(prisma.$executeRaw).toHaveBeenCalled();
+      expect(prisma.emailJob.updateMany).toHaveBeenCalled();
       expect(claimed).toBe(true);
     });
 
-    it('claimJobForProcessing should return false when raw update affects 0 rows (already claimed/sent)', async () => {
-      (prisma.$executeRaw as jest.Mock).mockResolvedValue(0);
+    it('claimJobForProcessing should return false when updateMany affects 0 rows (already claimed/sent)', async () => {
+      (prisma.emailJob.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
 
       const claimed = await emailJobRepository.claimJobForProcessing('job_123');
-      expect(prisma.$executeRaw).toHaveBeenCalled();
+      expect(prisma.emailJob.updateMany).toHaveBeenCalled();
       expect(claimed).toBe(false);
     });
 

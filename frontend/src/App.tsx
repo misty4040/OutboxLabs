@@ -57,12 +57,22 @@ export default function App() {
   };
 
   // Load stats and tables once authenticated
+  // Load stats and tables once authenticated, with 3s background polling
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    loadStats();
+    loadScheduledJobs(scheduledPage, true);
+
+    const interval = setInterval(() => {
       loadStats();
-      loadScheduledJobs(scheduledPage);
-    }
-  }, [user]);
+      if (activeTab === 'scheduled') {
+        loadScheduledJobs(scheduledPage, false);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user, activeTab, scheduledPage]);
 
   const loadStats = async () => {
     try {
@@ -73,9 +83,9 @@ export default function App() {
     }
   };
 
-  const loadScheduledJobs = async (page = 1) => {
+  const loadScheduledJobs = async (page = 1, showLoading = true) => {
     try {
-      setScheduledLoading(true);
+      if (showLoading) setScheduledLoading(true);
       setScheduledError(null);
       const result = await emailApi.getScheduled(page, 10);
       setScheduledJobs(result.jobs);
@@ -83,9 +93,11 @@ export default function App() {
       setScheduledPage(result.page);
       setScheduledTotalPages(result.totalPages);
     } catch (err: any) {
-      setScheduledError(err.response?.data?.message || 'Failed to load scheduled emails');
+      if (showLoading) {
+        setScheduledError(err.response?.data?.message || 'Failed to load scheduled emails');
+      }
     } finally {
-      setScheduledLoading(false);
+      if (showLoading) setScheduledLoading(false);
     }
   };
 

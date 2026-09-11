@@ -92,9 +92,15 @@ export class RateLimiterService {
         retryAfterMs,
       };
     } catch (error: any) {
-      console.error(`Rate limiter check error for user ${userId}:`, error.message);
-      // Fail-open or fallback safely if Redis fails (or re-throw if hard requirement)
-      throw error;
+      console.warn(`⚠️ [RateLimiter] Rate limiter check error for user ${userId} (${error.message}). Failing open to allow dispatch.`);
+      return {
+        allowed: true,
+        currentCount: 0,
+        limit,
+        hourWindow,
+        nextWindowStartMs,
+        retryAfterMs: 0,
+      };
     }
   }
 

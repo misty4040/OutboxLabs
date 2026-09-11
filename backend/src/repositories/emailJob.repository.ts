@@ -36,12 +36,24 @@ export class EmailJobRepository {
    * Returns true if successfully claimed, false if already claimed or sent.
    */
   async claimJobForProcessing(id: string): Promise<boolean> {
-    const result = await prisma.$executeRaw`
-      UPDATE EmailJob
-      SET status = 'PROCESSING', attempts = attempts + 1, updatedAt = NOW()
-      WHERE id = ${id} AND status IN ('PENDING', 'DELAYED', 'RATE_LIMITED')
-    `;
-    return result > 0;
+    const result = await prisma.emailJob.updateMany({
+      where: {
+        id,
+        status: {
+          in: [
+            EmailJobStatus.PENDING,
+            EmailJobStatus.DELAYED,
+            EmailJobStatus.RATE_LIMITED,
+            EmailJobStatus.PROCESSING,
+          ],
+        },
+      },
+      data: {
+        status: EmailJobStatus.PROCESSING,
+        attempts: { increment: 1 },
+      },
+    });
+    return result.count > 0;
   }
 
   async markSent(id: string, sentAt: Date = new Date()): Promise<EmailJob> {
@@ -130,13 +142,15 @@ export class EmailJobRepository {
 
     const where: Prisma.EmailJobWhereInput = {
       userId,
-      status: EmailJobStatus.SENT,
+      status: {
+        in: [EmailJobStatus.SENT, EmailJobStatus.FAILED],
+      },
     };
 
     const [jobs, total] = await Promise.all([
       prisma.emailJob.findMany({
         where,
-        orderBy: { sentAt: 'desc' },
+        orderBy: [{ sentAt: 'desc' }, { updatedAt: 'desc' }],
         skip,
         take: limit,
       }),

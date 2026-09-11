@@ -26,23 +26,33 @@ export const SentView: React.FC<SentViewProps> = ({ onSelectEmail, onRefreshStat
       }, 300);
       return () => clearTimeout(timer);
     } else {
-      loadSentEmails(page);
+      loadSentEmails(page, true);
+
+      // Auto-poll sent emails every 3 seconds while on Delivered tab
+      const interval = setInterval(() => {
+        loadSentEmails(page, false);
+      }, 3000);
+
+      return () => clearInterval(interval);
     }
   }, [searchQuery, page]);
 
-  const loadSentEmails = async (p = 1) => {
+  const loadSentEmails = async (p = 1, showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setError(null);
       setIsSearching(false);
       const res = await emailApi.getSent(p, 10);
       setJobs(res.jobs);
       setTotal(res.total);
       setTotalPages(res.totalPages);
+      onRefreshStats();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load delivered emails');
+      if (showLoading) {
+        setError(err.response?.data?.message || 'Failed to load delivered emails');
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
