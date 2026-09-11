@@ -5,4 +5,4 @@ nixPkgs = ["nodejs_20", "npm-10_x"]
 cmds = ["npm --workspace=backend run build"]
 
 [start]
-cmd = "cd backend && npx prisma db push --accept-data-loss && cd .. && npm --workspace=backend run start"
+cmd = "npm --workspace=backend run start"
