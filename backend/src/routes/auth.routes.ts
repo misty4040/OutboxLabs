@@ -19,22 +19,61 @@ export const sessionCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
+const resolveOAuthCallbackUrl = (req: Request): string => {
+  if (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')) {
+    return env.GOOGLE_CALLBACK_URL;
+  }
+
+  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+  const origin = (req.query.origin as string) || '';
+
+  const isDeployed =
+    env.NODE_ENV === 'production' ||
+    Boolean(process.env.RAILWAY_ENVIRONMENT) ||
+    Boolean(process.env.RAILWAY_STATIC_URL) ||
+    Boolean(process.env.RAILWAY_PUBLIC_DOMAIN) ||
+    host.includes('railway.app') ||
+    host.includes('vercel.app') ||
+    origin.includes('vercel.app') ||
+    (!host.includes('localhost') && !host.includes('127.0.0.1') && host.length > 0);
+
+  if (isDeployed) {
+    return 'https://outboxlabs-production.up.railway.app/auth/google/callback';
+  }
+
+  return env.GOOGLE_CALLBACK_URL || 'http://localhost:5001/auth/google/callback';
+};
+
+const resolveFrontendUrl = (req: Request): string => {
+  if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost')) {
+    return process.env.FRONTEND_URL;
+  }
+
+  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+  const isDeployed =
+    env.NODE_ENV === 'production' ||
+    Boolean(process.env.RAILWAY_ENVIRONMENT) ||
+    Boolean(process.env.RAILWAY_STATIC_URL) ||
+    host.includes('railway.app') ||
+    host.includes('vercel.app') ||
+    (!host.includes('localhost') && !host.includes('127.0.0.1') && host.length > 0);
+
+  if (isDeployed) {
+    return 'https://outbox-labs-frontend-indol.vercel.app';
+  }
+
+  return env.FRONTEND_URL || 'http://localhost:5173';
+};
+
 /**
  * GET /auth/google/url
  * Returns authorization URL to initiate Google OAuth
  */
 authRouter.get('/google/url', (req: Request, res: Response) => {
   try {
-    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
-    const isProdOrRailway = env.NODE_ENV === 'production' || host.includes('railway.app') || Boolean(process.env.RAILWAY_ENVIRONMENT);
-    const callbackUrl = isProdOrRailway
-      ? (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')
-          ? env.GOOGLE_CALLBACK_URL
-          : 'https://outboxlabs-production.up.railway.app/auth/google/callback')
-      : env.GOOGLE_CALLBACK_URL;
-
+    const callbackUrl = resolveOAuthCallbackUrl(req);
     const redirectUrl = googleAuthService.getAuthUrl(callbackUrl);
-    sendSuccess(res, { url: redirectUrl });
+    sendSuccess(res, { url: redirectUrl, callbackUrl });
   } catch (error: any) {
     sendError(res, error.message || 'Failed to generate Google auth URL', 500);
   }
@@ -45,27 +84,16 @@ authRouter.get('/google/url', (req: Request, res: Response) => {
  * Redirect URI callback from Google
  */
 authRouter.get('/google/callback', async (req: Request, res: Response) => {
-  const isProd = env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
-  const targetFrontend = isProd
-    ? (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost')
-        ? process.env.FRONTEND_URL
-        : 'https://outbox-labs-frontend-indol.vercel.app')
-    : env.FRONTEND_URL;
+  const targetFrontend = resolveFrontendUrl(req);
 
   try {
     const code = req.query.code as string;
     if (!code) {
-      return res.redirect(`${targetFrontend}/login?error=Missing+authorization+code`);
+      return res.redirect(`${targetFrontend}/?error=Missing+authorization+code`);
     }
 
-    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
-    const isProdOrRailway = isProd || host.includes('railway.app');
-    const callbackUrl = isProdOrRailway
-      ? (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')
-          ? env.GOOGLE_CALLBACK_URL
-          : 'https://outboxlabs-production.up.railway.app/auth/google/callback')
-      : env.GOOGLE_CALLBACK_URL;
-
+    const callbackUrl = resolveOAuthCallbackUrl(req);
+    console.log(`🔑 Exchanging Google code with callbackUrl: ${callbackUrl}`);
     const profile = await googleAuthService.getUserProfileFromCode(code, callbackUrl);
     const user = await userRepository.upsertGoogleUser(profile);
 
@@ -79,7 +107,7 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
     return res.redirect(`${targetFrontend}/?token=${token}`);
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
-    return res.redirect(`${targetFrontend}/login?error=${encodeURIComponent(error.message || 'OAuth error')}`);
+    return res.redirect(`${targetFrontend}/?error=${encodeURIComponent(error.message || 'OAuth error')}`);
   }
 });
 

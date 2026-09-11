@@ -4,13 +4,20 @@ import { UserProfile } from '../types';
 
 interface LoginViewProps {
   onLoginSuccess: (user: UserProfile) => void;
+  initialError?: string | null;
 }
 
-export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
+export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, initialError }) => {
   const [loading, setLoading] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError || null);
+
+  React.useEffect(() => {
+    if (initialError) {
+      setError(initialError);
+    }
+  }, [initialError]);
 
   // 1️⃣ Real Google OAuth Login
   const handleGoogleLogin = async () => {

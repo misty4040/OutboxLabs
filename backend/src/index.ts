@@ -7,19 +7,26 @@ import { elasticsearchService } from './services/elasticsearch.service';
 
 const startServer = async () => {
   try {
-    // 1. Initialize Elasticsearch index mapping
-    await elasticsearchService.initIndex();
-
-    // 2. Reconcile any stale PROCESSING jobs on boot
-    await recoveryService.reconcileStaleJobsOnStartup();
-
-    // 3. Initialize BullMQ background email worker
-    initEmailWorker();
-
-    const server = app.listen(env.PORT, () => {
-      console.log(`🚀 ReachInbox Scheduler API running on http://localhost:${env.PORT}`);
+    const port = env.PORT || 5001;
+    const server = app.listen(port, '0.0.0.0', () => {
+      console.log(`🚀 ReachInbox Scheduler API running on port ${port}`);
       console.log(`🔧 Concurrency: ${env.WORKER_CONCURRENCY} | Delay: ${env.EMAIL_DELAY_MS}ms | Hourly Cap: ${env.MAX_EMAILS_PER_HOUR}`);
     });
+
+    // Run background services asynchronously without blocking HTTP readiness
+    elasticsearchService.initIndex().catch((err: any) => {
+      console.warn(`⚠️ [Elasticsearch] Init skipped: ${err.message}`);
+    });
+
+    recoveryService.reconcileStaleJobsOnStartup().catch((err: any) => {
+      console.warn(`⚠️ [Startup Recovery] Error: ${err.message}`);
+    });
+
+    try {
+      initEmailWorker();
+    } catch (err: any) {
+      console.warn(`⚠️ [Worker] Worker init warning: ${err.message}`);
+    }
 
     const shutdown = async (signal: string) => {
       console.log(`\nReceived ${signal}. Gracefully shutting down...`);

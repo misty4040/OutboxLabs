@@ -56,6 +56,15 @@ export const createApp = (): express.Application => {
   // Bull Board Queue Dashboard (protected by requireAuth)
   app.use(setupBullBoardRouter());
 
+  // Fast health checks for hosting platforms (Railway/Docker)
+  app.get('/', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', service: 'reachinbox-scheduler-api' });
+  });
+
+  app.get('/health', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', service: 'reachinbox-scheduler-api' });
+  });
+
   // Health check endpoint with Redis and DB diagnostics
   app.get('/api/health', async (_req: Request, res: Response) => {
     let redisStatus = 'unknown';

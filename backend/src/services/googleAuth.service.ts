@@ -27,10 +27,7 @@ export class GoogleAuthService {
       throw new Error('GOOGLE_CLIENT_ID is not configured in environment variables');
     }
 
-    let redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
-    if ((env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT)) && redirectUri.includes('localhost')) {
-      redirectUri = 'https://outbox-labs-frontend-indol.vercel.app/auth/google/callback';
-    }
+    const redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
 
     const client = new OAuth2Client(
       env.GOOGLE_CLIENT_ID,
@@ -54,10 +51,7 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured in environment');
     }
 
-    let redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
-    if ((env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT)) && redirectUri.includes('localhost')) {
-      redirectUri = 'https://outbox-labs-frontend-indol.vercel.app/auth/google/callback';
-    }
+    const redirectUri = customCallbackUrl || env.GOOGLE_CALLBACK_URL;
 
     const client = new OAuth2Client(
       env.GOOGLE_CLIENT_ID,

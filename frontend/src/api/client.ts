@@ -34,7 +34,8 @@ export const authApi = {
     return res.data.data;
   },
   getGoogleAuthUrl: async (): Promise<string> => {
-    const res = await api.get('/auth/google/url');
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const res = await api.get(`/auth/google/url?origin=${encodeURIComponent(origin)}`);
     return res.data.data.url;
   },
   devLogin: async (email: string, name: string): Promise<UserProfile> => {

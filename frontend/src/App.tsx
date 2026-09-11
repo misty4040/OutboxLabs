@@ -25,11 +25,18 @@ export default function App() {
   const [scheduledTotalPages, setScheduledTotalPages] = useState(1);
   const [scheduledLoading, setScheduledLoading] = useState(false);
   const [scheduledError, setScheduledError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Check initial authentication and OAuth redirect token
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get('token');
+    const urlError = params.get('error');
+
+    if (urlError) {
+      setAuthError(decodeURIComponent(urlError));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     if (urlToken) {
       localStorage.setItem('reachinbox_token', urlToken);
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -104,7 +111,7 @@ export default function App() {
 
   // 1️⃣ Login Screen (Editorial Minimal)
   if (!user) {
-    return <LoginView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
+    return <LoginView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} initialError={authError} />;
   }
 
   // 2️⃣ Main Dashboard Layout (Editorial Sidebar + Content Area)
