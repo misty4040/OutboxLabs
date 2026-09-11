@@ -15,7 +15,12 @@ let redisClient: Redis | null = null;
 
 export const getRedisClient = (): Redis => {
   if (!redisClient) {
-    redisClient = new Redis(env.REDIS_URL, redisOptions);
+    try {
+      redisClient = new Redis(env.REDIS_URL, redisOptions);
+    } catch (err: any) {
+      console.error(`⚠️ [Redis] Error creating Redis client with ${env.REDIS_URL}: ${err.message}. Falling back to default.`);
+      redisClient = new Redis('redis://127.0.0.1:6379', redisOptions);
+    }
 
     redisClient.on('connect', () => {
       console.log('✅ Connected to Redis successfully');

@@ -6,35 +6,64 @@ import { z } from 'zod';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const isValidServiceUrl = (urlStr?: string): boolean => {
+  if (!urlStr) return false;
+  const trimmed = urlStr.trim();
+  if (
+    trimmed.length === 0 ||
+    trimmed === 'redis://:@:' ||
+    trimmed === 'mysql://:@:/' ||
+    trimmed.includes('://:@:') ||
+    trimmed.includes('://:@') ||
+    trimmed.endsWith('://:@:')
+  ) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return Boolean(parsed.hostname && parsed.hostname.length > 0);
+  } catch {
+    return false;
+  }
+};
+
 const resolveDatabaseUrl = (): string => {
   const dbUrl = process.env.DATABASE_URL?.trim();
-  if (dbUrl && dbUrl.length > 0) return dbUrl;
+  if (isValidServiceUrl(dbUrl)) return dbUrl!;
 
   const mysqlUrl = process.env.MYSQL_URL?.trim();
-  if (mysqlUrl && mysqlUrl.length > 0) return mysqlUrl;
+  if (isValidServiceUrl(mysqlUrl)) return mysqlUrl!;
 
-  const host = process.env.MYSQLHOST || process.env.MYSQL_HOST;
-  const pass = process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD;
-  if (host && pass) {
-    const user = process.env.MYSQLUSER || process.env.MYSQL_USER || 'root';
-    const port = process.env.MYSQLPORT || process.env.MYSQL_PORT || '3306';
-    const db = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'railway';
-    return `mysql://${user}:${pass}@${host}:${port}/${db}`;
+  const host = (process.env.MYSQLHOST || process.env.MYSQL_HOST)?.trim();
+  const pass = (process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD)?.trim();
+  const user = (process.env.MYSQLUSER || process.env.MYSQL_USER)?.trim() || 'root';
+  const port = (process.env.MYSQLPORT || process.env.MYSQL_PORT)?.trim() || '3306';
+  const db = (process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE)?.trim() || 'railway';
+
+  if (host && host.length > 0 && pass && pass.length > 0) {
+    const candidate = `mysql://${user}:${pass}@${host}:${port}/${db}`;
+    if (isValidServiceUrl(candidate)) return candidate;
   }
+
   return 'mysql://root:rootpassword@127.0.0.1:3306/reachinbox';
 };
 
 const resolveRedisUrl = (): string => {
   const rUrl = process.env.REDIS_URL?.trim();
-  if (rUrl && rUrl.length > 0) return rUrl;
+  if (isValidServiceUrl(rUrl)) return rUrl!;
 
-  const host = process.env.REDISHOST || process.env.REDIS_HOST;
-  const pass = process.env.REDISPASSWORD || process.env.REDIS_PASSWORD;
-  if (host && pass) {
-    const user = process.env.REDISUSER || process.env.REDIS_USER || 'default';
-    const port = process.env.REDISPORT || process.env.REDIS_PORT || '6379';
-    return `redis://${user}:${pass}@${host}:${port}`;
+  const host = (process.env.REDISHOST || process.env.REDIS_HOST)?.trim();
+  const pass = (process.env.REDISPASSWORD || process.env.REDIS_PASSWORD)?.trim();
+  const user = (process.env.REDISUSER || process.env.REDIS_USER)?.trim() || 'default';
+  const port = (process.env.REDISPORT || process.env.REDIS_PORT)?.trim() || '6379';
+
+  if (host && host.length > 0) {
+    const candidate = pass && pass.length > 0
+      ? `redis://${user}:${pass}@${host}:${port}`
+      : `redis://${host}:${port}`;
+    if (isValidServiceUrl(candidate)) return candidate;
   }
+
   return 'redis://127.0.0.1:6379';
 };
 
