@@ -75,14 +75,25 @@ export class EmailSenderService {
    */
   async sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
     try {
-      const transporter = await Promise.race([
-        this.getTransporter(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('SMTP transporter initialization timeout')), 5000)
-        ),
-      ]);
+      const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, errorMsg: string): Promise<T> => {
+        let timer: NodeJS.Timeout;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(errorMsg)), timeoutMs);
+        });
+        try {
+          return await Promise.race([promise, timeoutPromise]);
+        } finally {
+          clearTimeout(timer!);
+        }
+      };
 
-      const info = await Promise.race([
+      const transporter = await withTimeout(
+        this.getTransporter(),
+        5000,
+        'SMTP transporter initialization timeout'
+      );
+
+      const info = await withTimeout(
         transporter.sendMail({
           from: env.SMTP_FROM,
           to: options.to,
@@ -90,10 +101,9 @@ export class EmailSenderService {
           text: options.body,
           html: options.html || options.body.replace(/\n/g, '<br />'),
         }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('SMTP send timeout')), 7000)
-        ),
-      ]);
+        7000,
+        'SMTP send timeout'
+      );
 
       const previewUrl = nodemailer.getTestMessageUrl(info);
 
